@@ -8,6 +8,7 @@ Name: Xi Peng UNI: xp2213 Date: 10.14.2024
 ## Section 1: Data cleaning
 
 ``` r
+
 data("ny_noaa")
 
 weather_dat = ny_noaa |> 
@@ -24,6 +25,7 @@ snow_comm = weather_dat |>
   group_by(snow,id) |> 
   summarise(count = n()) |> 
   arrange(desc(count))
+  
 ```
 
 In the original “ny_noaa” datasets, there are 2595176 observations and
@@ -46,6 +48,7 @@ recording snowfall on certain days or data collection issues.
 ## Section 2: Comparison of average maximum temperature in January and July across weather stations over the years
 
 ``` r
+
 weather_jan_jul = weather_dat |> 
   drop_na() |> 
    mutate(month = as.numeric(month)) |>
@@ -76,7 +79,7 @@ knitr::opts_chunk$set(
 weather_jan_jul_ggplot
 ```
 
-![](p8105homework3_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-2-1.png" width="90%" />
 
 I checked the dataset and recognized there are 747 stations. One issue
 that needed attention is the large number of stations in the dataset.
@@ -106,6 +109,7 @@ events or errors in data recording.
 ## Section 3: Analysis of temperature extremes and distribution of snowfall patterns
 
 ``` r
+
 tmax_vs_tmin_panel = weather_dat |> 
   ggplot(aes(x = tmin, y = tmax)) +
   geom_hex(bins = 50) +
@@ -143,6 +147,7 @@ pdf files.
 ## Section 1: Dataset import and organization
 
 ``` r
+
 nhanes_covar_df =
     read_csv("nhanes_covar.csv", na = c("NA", "", ".", " "), skip = 4) |> 
     janitor::clean_names() |> 
@@ -160,37 +165,31 @@ nhanes_covar_df =
         "1" ~ "Male",
         "2" ~ "Female"
       ))
-```
-
-    ## Rows: 250 Columns: 5
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## dbl (5): SEQN, sex, age, BMI, education
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-``` r
+## Rows: 250 Columns: 5
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## dbl (5): SEQN, sex, age, BMI, education
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+    
 nhanes_accel_df =
     read_csv("nhanes_accel.csv", na = c("NA", "", ".", " ")) |> 
   janitor::clean_names()
-```
+## Rows: 250 Columns: 1441
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## dbl (1441): SEQN, min1, min2, min3, min4, min5, min6, min7, min8, min9, min1...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
-    ## Rows: 250 Columns: 1441
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## dbl (1441): SEQN, min1, min2, min3, min4, min5, min6, min7, min8, min9, min1...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-``` r
 Merged_nhanes_dat = nhanes_covar_df |> 
   inner_join(nhanes_accel_df, by = "seqn") |> 
   filter(age > 21) |> 
   mutate(
     sex = factor(sex, levels = c("Male", "Female")),
-    education = factor(education, levels = c(
+    Education = factor(education, levels = c(
       "Less than high school",
       "High school equivalent",
       "More than high school"
@@ -199,3 +198,53 @@ Merged_nhanes_dat = nhanes_covar_df |>
 
 In this section, the datasets were cleaned and organized as per the
 requirements, and a merged dataset was created.
+
+## Section 2:Gender distribution and age trends across education categories
+
+``` r
+
+Sex_in_education_cate = Merged_nhanes_dat |> 
+  group_by(education, sex) |> 
+  summarise(count = n()) |> 
+  pivot_wider(
+    names_from = sex,
+    values_from = count
+  )
+
+knitr::kable(Sex_in_education_cate, caption = "Number of Men and Women in Each Education Category")
+```
+
+| education              | Male | Female |
+|:-----------------------|-----:|-------:|
+| High school equivalent |   34 |     23 |
+| Less than high school  |   27 |     28 |
+| More than high school  |   54 |     59 |
+
+Number of Men and Women in Each Education Category
+
+``` r
+
+Age_distri_in_Edc_plot = Merged_nhanes_dat |> 
+  ggplot(aes(x = age, fill = sex)) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~education) +
+  labs(
+    title = "Age Distribution by Education and Gender",
+    x = "Age",
+    y = "Density"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom") 
+
+Age_distri_in_Edc_plot2 = Merged_nhanes_dat |> 
+  ggplot(aes(x = age, fill = sex)) +
+ geom_histogram(position = "dodge", binwidth = 2) +
+  facet_wrap(~education) +
+  labs(
+    title = "Age Distribution by Education and Gender",
+    x = "Age",
+    y = "Density"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom") 
+```
