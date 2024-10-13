@@ -3,9 +3,9 @@ P8105 Homework 3
 
 Name: Xi Peng UNI: xp2213 Date: 10.14.2024
 
-# Question 1 Exploration of “NY NOAA” dataset
+# Question 1. Exploration of “NY NOAA” dataset
 
-## Section 1 Data cleaning
+## Section 1: Data cleaning
 
 ``` r
 data("ny_noaa")
@@ -43,7 +43,7 @@ recorded for snowfall in these areas. The presence of `NA` values
 indicates missing data, which could be due to weather stations not
 recording snowfall on certain days or data collection issues.
 
-## Section 2 Comparison of average maximum temperature in January and July across weather stations over the years
+## Section 2: Comparison of average maximum temperature in January and July across weather stations over the years
 
 ``` r
 weather_jan_jul = weather_dat |> 
@@ -103,7 +103,7 @@ station in July 1988 recorded unusually low average temperature, far
 below the general trend. These anomalies could indicate extreme weather
 events or errors in data recording.
 
-## Section 3 Analysis of temperature extremes and distribution of snowfall patterns
+## Section 3: Analysis of temperature extremes and distribution of snowfall patterns
 
 ``` r
 tmax_vs_tmin_panel = weather_dat |> 
@@ -137,3 +137,65 @@ ggsave("snowfall_distri_panel.pdf", snowfall_distri_panel, width = 10, height = 
 Due to the large size of the two panels, which made it difficult to
 display them properly in the document, I have saved these two panels as
 pdf files.
+
+# Question 2. Analysis of accelerometer data from the NHANES study
+
+## Section 1: Dataset import and organization
+
+``` r
+nhanes_covar_df =
+    read_csv("nhanes_covar.csv", na = c("NA", "", ".", " "), skip = 4) |> 
+    janitor::clean_names() |> 
+  drop_na() |> 
+  mutate( education = as.character(education), sex = as.character(sex)
+  ) |> 
+    mutate(
+      education = case_match(
+        education,
+        "1" ~ "Less than high school",
+        "2" ~ "High school equivalent",
+        "3" ~ "More than high school"),
+      sex = case_match(
+        sex,
+        "1" ~ "Male",
+        "2" ~ "Female"
+      ))
+```
+
+    ## Rows: 250 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl (5): SEQN, sex, age, BMI, education
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+nhanes_accel_df =
+    read_csv("nhanes_accel.csv", na = c("NA", "", ".", " ")) |> 
+  janitor::clean_names()
+```
+
+    ## Rows: 250 Columns: 1441
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl (1441): SEQN, min1, min2, min3, min4, min5, min6, min7, min8, min9, min1...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+Merged_nhanes_dat = nhanes_covar_df |> 
+  inner_join(nhanes_accel_df, by = "seqn") |> 
+  filter(age > 21) |> 
+  mutate(
+    sex = factor(sex, levels = c("Male", "Female")),
+    education = factor(education, levels = c(
+      "Less than high school",
+      "High school equivalent",
+      "More than high school"
+    )))
+```
+
+In this section, the datasets were cleaned and organized as per the
+requirements, and a merged dataset was created.

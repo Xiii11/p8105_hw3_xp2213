@@ -11,9 +11,9 @@ library(p8105.datasets)
 library(dplyr)
 ```
 
-# Question 1 Exploration of "NY NOAA" dataset
+# Question 1. Exploration of "NY NOAA" dataset
 
-## Section 1 Data cleaning
+## Section 1: Data cleaning
 
 ```{r, message=FALSE}
 
@@ -41,7 +41,7 @@ In the original "ny_noaa" datasets, there are `r nrow(ny_noaa)` observations and
 By checking the "snow" variable for snowfall, the result shows that `0 cm` and `NA` are the most commonly observed values. The likely reason is that for most of the year, these regions do not experience snowfall, especially during warmer months. Additionally, some regions included in the dataset may not experience snow at all throughout the year due to their warmer climates or geographical location. These places are unlikely to have a snow season, and as a result, `0 cm` is consistently recorded for snowfall in these areas. The presence of `NA` values indicates missing data, which could be due to weather stations not recording snowfall on certain days or data collection issues.
 
 
-## Section 2 Comparison of average maximum temperature in January and July across weather stations over the years
+## Section 2: Comparison of average maximum temperature in January and July across weather stations over the years
 
 ```{r, message=FALSE}
 
@@ -81,7 +81,7 @@ I checked the dataset and recognized there are `r length(unique(pull(weather_dat
 According to the scatterplot, there are clear seasonal differences between January and July temperatures. The temperatures are generally colder in January, and warmer in July across stations and years. Due to the large number of stations included in this dataset, without restricting the analysis to a specific time range or a particular set of stations, I can only observe general trends. The observable structure shows that temperatures in January typically range from -10 °C to 10 °C, where temperatures in July typically ranger from 20 °C to 32.5 °C. Comparing 1981 to 2010, there appears to be a slight increase in temperatures for both January and July, suggesting a possible warming trend over time.There's considerable variability both between stations and from year to year, illustrating geographical and annual climate differences. There are several noticeable outlines. For example, in January 1982 and 1996, some stations recorded average maximum temperatures below -10 °C, reflecting extremely cold winters. Also, one station in July 1988 recorded unusually low average temperature, far below the general trend. These anomalies could indicate extreme weather events or errors in data recording.
 
 
-## Section 3 Analysis of temperature extremes and distribution of snowfall patterns
+## Section 3: Analysis of temperature extremes and distribution of snowfall patterns
 
 ```{r, message=FALSE, warning=FALSE}
 
@@ -116,5 +116,49 @@ ggsave("snowfall_distri_panel.pdf", snowfall_distri_panel, width = 10, height = 
 
 Due to the large size of the two panels, which made it difficult to display them properly in the document, I have saved these two panels as pdf files.
 
+
+
+# Question 2. Analysis of accelerometer data from the NHANES study
+
+## Section 1: Dataset import and organization
+
+```{r}
+
+nhanes_covar_df =
+    read_csv("nhanes_covar.csv", na = c("NA", "", ".", " "), skip = 4) |> 
+    janitor::clean_names() |> 
+  drop_na() |> 
+  mutate( education = as.character(education), sex = as.character(sex)
+  ) |> 
+    mutate(
+      education = case_match(
+        education,
+        "1" ~ "Less than high school",
+        "2" ~ "High school equivalent",
+        "3" ~ "More than high school"),
+      sex = case_match(
+        sex,
+        "1" ~ "Male",
+        "2" ~ "Female"
+      ))
+    
+nhanes_accel_df =
+    read_csv("nhanes_accel.csv", na = c("NA", "", ".", " ")) |> 
+  janitor::clean_names()
+
+Merged_nhanes_dat = nhanes_covar_df |> 
+  inner_join(nhanes_accel_df, by = "seqn") |> 
+  filter(age > 21) |> 
+  mutate(
+    sex = factor(sex, levels = c("Male", "Female")),
+    education = factor(education, levels = c(
+      "Less than high school",
+      "High school equivalent",
+      "More than high school"
+    )))
+
+```
+
+In this section, the datasets were cleaned and organized as per the requirements, and a merged dataset was created.
 
 
