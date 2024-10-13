@@ -1,12 +1,11 @@
 P8105 Homework 3
 ================
-2024-10-12
 
-Name: Xi Peng UNI: xp2213
+Name: Xi Peng UNI: xp2213 Date: 10.14.2024
 
-\#Question 1 Exploration of “NY NOAA” dataset
+# Question 1 Exploration of “NY NOAA” dataset
 
-\##Section 1 Data cleaning
+## Section 1 Data cleaning
 
 ``` r
 data("ny_noaa")
@@ -43,3 +42,63 @@ unlikely to have a snow season, and as a result, `0 cm` is consistently
 recorded for snowfall in these areas. The presence of `NA` values
 indicates missing data, which could be due to weather stations not
 recording snowfall on certain days or data collection issues.
+
+## Section 2 Comparison of average maximum temperature in January and July across weather stations over the years
+
+``` r
+weather_jan_jul = weather_dat |> 
+  drop_na() |> 
+   mutate(month = as.numeric(month)) |>
+  filter(month == 01 | month == 07) |> 
+  group_by(id, year, month) |> 
+  summarise(avg_tmax = mean(tmax, na.rm = TRUE))
+ 
+weather_jan_jul_ggplot = weather_jan_jul |> 
+ggplot(aes(x = year, y = avg_tmax, group = id, color = id)) +
+  geom_point(size = 1.5) +
+  facet_wrap(~month, ncol = 1, scale = "free", labeller = labeller(month = c("1" = "January", "7" = "July"))) +
+  labs(
+    title = "Average Max Temperature in January and July by Stations",
+       x = "Year", 
+       y = "Average Max Temperature (°C)") +
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  viridis::scale_color_viridis(
+    name = "id", 
+    discrete = TRUE)
+
+knitr::opts_chunk$set(
+  fig.width = 15,
+  fig.asp = 10,
+  out.width = "100%"
+)
+
+weather_jan_jul_ggplot
+```
+
+![](p8105homework3_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+I checked the dataset and recognized there are 747 stations. One issue
+that needed attention is the large number of stations in the dataset.
+Including all the station labels would result in the scatterplot not
+being displayed properly because of the excessive number of stations in
+the legend.
+
+According to the scatterplot, there are clear seasonal differences
+between January and July temperatures. The temperatures are generally
+colder in January, and warmer in July across stations and years. Due to
+the large number of stations included in this dataset, without
+restricting the analysis to a specific time range or a particular set of
+stations, I can only observe general trends. The observable structure
+shows that temperatures in January typically range from -10 °C to 10 °C,
+where temperatures in July typically ranger from 20 °C to 32.5 °C.
+Comparing 1981 to 2010, there appears to be a slight increase in
+temperatures for both January and July, suggesting a possible warming
+trend over time.There’s considerable variability both between stations
+and from year to year, illustrating geographical and annual climate
+differences. There are several noticeable outlines. For example, in
+January 1982 and 1996, some stations recorded average maximum
+temperatures below -10 °C, reflecting extremely cold winters. Also, one
+station in July 1988 recorded unusually low average temperature, far
+below the general trend. These anomalies could indicate extreme weather
+events or errors in data recording.
