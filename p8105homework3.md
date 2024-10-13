@@ -102,3 +102,38 @@ temperatures below -10 °C, reflecting extremely cold winters. Also, one
 station in July 1988 recorded unusually low average temperature, far
 below the general trend. These anomalies could indicate extreme weather
 events or errors in data recording.
+
+## Section 3 Analysis of temperature extremes and distribution of snowfall patterns
+
+``` r
+tmax_vs_tmin_panel = weather_dat |> 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex(bins = 50) +
+  scale_fill_viridis_c() +
+  labs(
+    title = "Temperature Comparison: tmax vs tmin",
+    x = "Minimum Temperature (°C)",
+    y = "Maximum Temperature (°C)"
+  ) +
+  theme_minimal()+
+  theme(legend.position = "bottom") 
+
+snowfall_distri_panel = weather_dat |> 
+  filter(snow > 0.0 & snow < 100.0) |> 
+  ggplot(aes(x = year, y = snow, color = id)) +
+  geom_point(alpha = 0.1, size = 1) +
+  labs(
+    subtitle = "Distribution of snowfall values by year",
+    x = "Year",
+    y = "Snowfall (mm)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") 
+
+ggsave("tmax_vs_tmin_panel.pdf", tmax_vs_tmin_panel, width = 20, height = 18)
+ggsave("snowfall_distri_panel.pdf", snowfall_distri_panel, width = 10, height = 20)
+```
+
+Due to the large size of the two panels, which made it difficult to
+display them properly in the document, I have saved these two panels as
+pdf files.

@@ -79,3 +79,42 @@ weather_jan_jul_ggplot
 I checked the dataset and recognized there are `r length(unique(pull(weather_dat,id)))` stations. One issue that needed attention is the large number of stations in the dataset. Including all the station labels would result in the scatterplot not being displayed properly because of the excessive number of stations in the legend.
 
 According to the scatterplot, there are clear seasonal differences between January and July temperatures. The temperatures are generally colder in January, and warmer in July across stations and years. Due to the large number of stations included in this dataset, without restricting the analysis to a specific time range or a particular set of stations, I can only observe general trends. The observable structure shows that temperatures in January typically range from -10 °C to 10 °C, where temperatures in July typically ranger from 20 °C to 32.5 °C. Comparing 1981 to 2010, there appears to be a slight increase in temperatures for both January and July, suggesting a possible warming trend over time.There's considerable variability both between stations and from year to year, illustrating geographical and annual climate differences. There are several noticeable outlines. For example, in January 1982 and 1996, some stations recorded average maximum temperatures below -10 °C, reflecting extremely cold winters. Also, one station in July 1988 recorded unusually low average temperature, far below the general trend. These anomalies could indicate extreme weather events or errors in data recording.
+
+
+## Section 3 Analysis of temperature extremes and distribution of snowfall patterns
+
+```{r, message=FALSE, warning=FALSE}
+
+tmax_vs_tmin_panel = weather_dat |> 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex(bins = 50) +
+  scale_fill_viridis_c() +
+  labs(
+    title = "Temperature Comparison: tmax vs tmin",
+    x = "Minimum Temperature (°C)",
+    y = "Maximum Temperature (°C)"
+  ) +
+  theme_minimal()+
+  theme(legend.position = "bottom") 
+
+snowfall_distri_panel = weather_dat |> 
+  filter(snow > 0.0 & snow < 100.0) |> 
+  ggplot(aes(x = year, y = snow, color = id)) +
+  geom_point(alpha = 0.1, size = 1) +
+  labs(
+    subtitle = "Distribution of snowfall values by year",
+    x = "Year",
+    y = "Snowfall (mm)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") 
+
+ggsave("tmax_vs_tmin_panel.pdf", tmax_vs_tmin_panel, width = 20, height = 18)
+ggsave("snowfall_distri_panel.pdf", snowfall_distri_panel, width = 10, height = 20)
+
+```
+
+Due to the large size of the two panels, which made it difficult to display them properly in the document, I have saved these two panels as pdf files.
+
+
+
