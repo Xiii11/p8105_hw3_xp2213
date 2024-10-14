@@ -8,7 +8,6 @@ Name: Xi Peng UNI: xp2213 Date: 10.14.2024
 ## Section 1: Data cleaning
 
 ``` r
-
 data("ny_noaa")
 
 weather_dat = ny_noaa |> 
@@ -25,7 +24,6 @@ snow_comm = weather_dat |>
   group_by(snow,id) |> 
   summarise(count = n()) |> 
   arrange(desc(count))
-  
 ```
 
 In the original “ny_noaa” datasets, there are 2595176 observations and
@@ -48,33 +46,25 @@ recording snowfall on certain days or data collection issues.
 ## Section 2: Comparison of average maximum temperature in January and July across weather stations over the years
 
 ``` r
-
 weather_jan_jul = weather_dat |> 
-  drop_na() |> 
-   mutate(month = as.numeric(month)) |>
-  filter(month == 01 | month == 07) |> 
   group_by(id, year, month) |> 
-  summarise(avg_tmax = mean(tmax, na.rm = TRUE))
- 
-weather_jan_jul_ggplot = weather_jan_jul |> 
-ggplot(aes(x = year, y = avg_tmax, group = id, color = id)) +
-  geom_point(size = 1.5) +
-  facet_wrap(~month, ncol = 1, scale = "free", labeller = labeller(month = c("1" = "January", "7" = "July"))) +
-  labs(
-    title = "Average Max Temperature in January and July by Stations",
-       x = "Year", 
-       y = "Average Max Temperature (°C)") +
-  theme_minimal() + 
-  theme(legend.position = "none") +
-  viridis::scale_color_viridis(
-    name = "id", 
-    discrete = TRUE)
+  mutate(month = as.numeric(month)) |>
+  filter(month %in% c(1, 7)) |>
+  summarise(mean_tmax = mean(tmax, na.rm = TRUE, color = id))
+```
 
-knitr::opts_chunk$set(
-  fig.width = 15,
-  fig.asp = 10,
-  out.width = "100%"
-)
+    ## `summarise()` has grouped output by 'id', 'year'. You can override using the
+    ## `.groups` argument.
+
+``` r
+weather_jan_jul_ggplot = weather_jan_jul |> 
+ggplot(aes(x = year, y = mean_tmax, group = id)) +
+  geom_point() + geom_path() +
+  facet_grid(~month) +
+  labs(
+    title = "Mean Max Temperature in January and July by Stations",
+       x = "Year", 
+       y = "Mean Max Temperature (°C)") 
 
 weather_jan_jul_ggplot
 ```
@@ -109,45 +99,35 @@ events or errors in data recording.
 ## Section 3: Analysis of temperature extremes and distribution of snowfall patterns
 
 ``` r
-
 tmax_vs_tmin_panel = weather_dat |> 
   ggplot(aes(x = tmin, y = tmax)) +
-  geom_hex(bins = 50) +
-  scale_fill_viridis_c() +
+  geom_hex() +
   labs(
     title = "Temperature Comparison: tmax vs tmin",
     x = "Minimum Temperature (°C)",
     y = "Maximum Temperature (°C)"
-  ) +
-  theme_minimal()+
-  theme(legend.position = "bottom") 
+  ) 
 
 snowfall_distri_panel = weather_dat |> 
-  filter(snow > 0.0 & snow < 100.0) |> 
-  ggplot(aes(x = year, y = snow, color = id)) +
-  geom_point(alpha = 0.1, size = 1) +
+  filter(snow < 100, snow > 0) |> 
+  ggplot(aes(x = snow, y = as.factor(year))) +
+  geom_density_ridges() +
   labs(
     subtitle = "Distribution of snowfall values by year",
-    x = "Year",
-    y = "Snowfall (mm)"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none") 
+    x = "Snow",
+    y = "as.factor(year)"
+  ) 
 
-ggsave("tmax_vs_tmin_panel.pdf", tmax_vs_tmin_panel, width = 20, height = 18)
-ggsave("snowfall_distri_panel.pdf", snowfall_distri_panel, width = 10, height = 20)
+tmax_vs_tmin_panel + snowfall_distri_panel
 ```
 
-Due to the large size of the two panels, which made it difficult to
-display them properly in the document, I have saved these two panels as
-pdf files.
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-3-1.png" width="90%" />
 
 # Question 2. Analysis of accelerometer data from the NHANES study
 
 ## Section 1: Dataset import and organization
 
 ``` r
-
 nhanes_covar_df =
     read_csv("nhanes_covar.csv", na = c("NA", "", ".", " "), skip = 4) |> 
     janitor::clean_names() |> 
@@ -165,25 +145,31 @@ nhanes_covar_df =
         "1" ~ "Male",
         "2" ~ "Female"
       ))
-## Rows: 250 Columns: 5
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: ","
-## dbl (5): SEQN, sex, age, BMI, education
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-    
+```
+
+    ## Rows: 250 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl (5): SEQN, sex, age, BMI, education
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
 nhanes_accel_df =
     read_csv("nhanes_accel.csv", na = c("NA", "", ".", " ")) |> 
   janitor::clean_names()
-## Rows: 250 Columns: 1441
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: ","
-## dbl (1441): SEQN, min1, min2, min3, min4, min5, min6, min7, min8, min9, min1...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
 
+    ## Rows: 250 Columns: 1441
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl (1441): SEQN, min1, min2, min3, min4, min5, min6, min7, min8, min9, min1...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
 Merged_nhanes_dat = nhanes_covar_df |> 
   inner_join(nhanes_accel_df, by = "seqn") |> 
   filter(age > 21) |> 
@@ -202,7 +188,6 @@ requirements, and a merged dataset was created.
 ## Section 2:Gender distribution and age trends across education categories
 
 ``` r
-
 Sex_in_education_cate = Merged_nhanes_dat |> 
   group_by(education, sex) |> 
   summarise(count = n()) |> 
@@ -223,7 +208,6 @@ knitr::kable(Sex_in_education_cate, caption = "Number of Men and Women in Each E
 Number of Men and Women in Each Education Category
 
 ``` r
-
 Age_distri_in_Edc_plot = Merged_nhanes_dat |> 
   ggplot(aes(x = age, fill = sex)) +
   geom_density(alpha = 0.5) +

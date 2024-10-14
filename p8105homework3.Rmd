@@ -7,16 +7,30 @@ Name: Xi Peng   UNI: xp2213    Date: 10.14.2024
 
 ```{r setup, include=FALSE}
 
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  fig.width = 6,
-  fig.asp = .6,
-  out.width = "90%"
-)
-
 library(tidyverse)
 library(p8105.datasets)
 library(dplyr)
+library(patchwork)
+library(ggridges)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
 ```
 
 # Question 1. Exploration of "NY NOAA" dataset
@@ -49,39 +63,26 @@ In the original "ny_noaa" datasets, there are `r nrow(ny_noaa)` observations and
 By checking the "snow" variable for snowfall, the result shows that `0 cm` and `NA` are the most commonly observed values. The likely reason is that for most of the year, these regions do not experience snowfall, especially during warmer months. Additionally, some regions included in the dataset may not experience snow at all throughout the year due to their warmer climates or geographical location. These places are unlikely to have a snow season, and as a result, `0 cm` is consistently recorded for snowfall in these areas. The presence of `NA` values indicates missing data, which could be due to weather stations not recording snowfall on certain days or data collection issues.
 
 
-## Section 2: Comparison of average maximum temperature in January and July across weather stations over the years
+## Section 2: Comparison of mean maximum temperature in January and July across weather stations over the years
 
-```{r, message=FALSE}
+```{r}
 
 weather_jan_jul = weather_dat |> 
-  drop_na() |> 
-   mutate(month = as.numeric(month)) |>
-  filter(month == 01 | month == 07) |> 
   group_by(id, year, month) |> 
-  summarise(avg_tmax = mean(tmax, na.rm = TRUE))
+  mutate(month = as.numeric(month)) |>
+  filter(month %in% c(1, 7)) |>
+  summarise(mean_tmax = mean(tmax, na.rm = TRUE, color = id))
  
 weather_jan_jul_ggplot = weather_jan_jul |> 
-ggplot(aes(x = year, y = avg_tmax, group = id, color = id)) +
-  geom_point(size = 1.5) +
-  facet_wrap(~month, ncol = 1, scale = "free", labeller = labeller(month = c("1" = "January", "7" = "July"))) +
+ggplot(aes(x = year, y = mean_tmax, group = id)) +
+  geom_point() + geom_path() +
+  facet_grid(~month) +
   labs(
-    title = "Average Max Temperature in January and July by Stations",
+    title = "Mean Max Temperature in January and July by Stations",
        x = "Year", 
-       y = "Average Max Temperature (°C)") +
-  theme_minimal() + 
-  theme(legend.position = "none") +
-  viridis::scale_color_viridis(
-    name = "id", 
-    discrete = TRUE)
-
-knitr::opts_chunk$set(
-  fig.width = 15,
-  fig.asp = 10,
-  out.width = "100%"
-)
+       y = "Mean Max Temperature (°C)") 
 
 weather_jan_jul_ggplot
-
 ```
 
 I checked the dataset and recognized there are `r length(unique(pull(weather_dat,id)))` stations. One issue that needed attention is the large number of stations in the dataset. Including all the station labels would result in the scatterplot not being displayed properly because of the excessive number of stations in the legend.
@@ -95,34 +96,25 @@ According to the scatterplot, there are clear seasonal differences between Janua
 
 tmax_vs_tmin_panel = weather_dat |> 
   ggplot(aes(x = tmin, y = tmax)) +
-  geom_hex(bins = 50) +
-  scale_fill_viridis_c() +
+  geom_hex() +
   labs(
     title = "Temperature Comparison: tmax vs tmin",
     x = "Minimum Temperature (°C)",
     y = "Maximum Temperature (°C)"
-  ) +
-  theme_minimal()+
-  theme(legend.position = "bottom") 
+  ) 
 
 snowfall_distri_panel = weather_dat |> 
-  filter(snow > 0.0 & snow < 100.0) |> 
-  ggplot(aes(x = year, y = snow, color = id)) +
-  geom_point(alpha = 0.1, size = 1) +
+  filter(snow < 100, snow > 0) |> 
+  ggplot(aes(x = snow, y = as.factor(year))) +
+  geom_density_ridges() +
   labs(
     subtitle = "Distribution of snowfall values by year",
-    x = "Year",
-    y = "Snowfall (mm)"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none") 
+    x = "Snow",
+    y = "as.factor(year)"
+  ) 
 
-ggsave("tmax_vs_tmin_panel.pdf", tmax_vs_tmin_panel, width = 20, height = 18)
-ggsave("snowfall_distri_panel.pdf", snowfall_distri_panel, width = 10, height = 20)
-
+tmax_vs_tmin_panel + snowfall_distri_panel
 ```
-
-Due to the large size of the two panels, which made it difficult to display them properly in the document, I have saved these two panels as pdf files.
 
 
 
