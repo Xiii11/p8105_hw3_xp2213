@@ -246,3 +246,60 @@ age 70 and 80. Lastly, for the “More than high school” category, both
 genders demonstrate a right-skewed distribution. Females have a
 prominent peak at age of 30, and males also show less pronounced peak
 around that age.
+
+## Section 3: Impact of age, gender, and education on total daily activity
+
+``` r
+Total_daily_activity = Merged_nhanes_dat |> 
+  group_by(seqn, age, sex, Education) |> 
+  summarise(total_activity = sum(min1:min1440, na.rm = TRUE)) |> 
+  ggplot(aes(x = age, y = total_activity, color = sex)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth() +
+  facet_grid(~Education) +
+  labs(
+    title = "Total Daily Activity vs. Age by Education Level and Gender",
+    x = "Age",
+    y = "Total Activities"
+  )
+```
+
+    ## `summarise()` has grouped output by 'seqn', 'age', 'sex'. You can override
+    ## using the `.groups` argument.
+
+``` r
+Total_daily_activity  
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-7-1.png" width="90%" />
+
+For the first category, “Less than high school,” the overall daily total
+activity appears to be low for both male and female participants, with
+most data points falling below 50 in total activities. Both genders show
+a slight decrease in activity as they age. The trend lines indicate that
+women maintain slightly higher daily activity in middle and older ages,
+while male participants tend to have higher activity levels in younger
+age groups.
+
+For participants with “High school equivalent” degrees, activity levels
+remain low for both males and females. Activity decreases with age for
+both genders. The trend lines suggest that there are no large
+differences between men and women, although men’s activity levels
+continue to decline more consistently compared to women as they age.
+
+In the last category, “More than high school,” both genders display
+higher overall activity levels compared to the other two categories,
+particularly among the younger participants. Women between the ages of
+20 and 60 show higher activity levels compared to men with the same
+education level. The trend lines indicate a decline in men’s total
+activity levels around the age of 40, while women in this group remain
+consistently more active across all ages.
+
+In general, total activity levels decrease with age across all education
+categories. The differences between genders are relatively small, but
+participants with higher education levels tend to have higher total
+activity levels overall.
+
+## Section 4: 24Hr activity patterns by education level and gender
