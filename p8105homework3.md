@@ -12,12 +12,10 @@ data("ny_noaa")
 
 weather_dat = ny_noaa |> 
   janitor::clean_names() |> 
-  separate(date, c('year', 'month', 'day'), sep ='-', remove = TRUE) |>
+  separate(date, into = c('year', 'month', 'day'), remove = TRUE) |>
   mutate(
-    tmax = as.numeric(tmax) / 10,
-    tmin = as.numeric(tmin) / 10,
-    prcp = prcp / 10,
-    snow = snow / 10,
+    tmax = as.numeric(tmax),
+    tmin = as.numeric(tmin)
   )
 
 snow_comm = weather_dat |> 
@@ -43,12 +41,15 @@ recorded for snowfall in these areas. The presence of `NA` values
 indicates missing data, which could be due to weather stations not
 recording snowfall on certain days or data collection issues.
 
-## Section 2: Comparison of average maximum temperature in January and July across weather stations over the years
+## Section 2: Comparison of mean maximum temperature in January and July across weather stations over the years
 
 ``` r
 weather_jan_jul = weather_dat |> 
   group_by(id, year, month) |> 
-  mutate(month = as.numeric(month)) |>
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+         ) |>
   filter(month %in% c(1, 7)) |>
   summarise(mean_tmax = mean(tmax, na.rm = TRUE, color = id))
 ```
@@ -61,6 +62,7 @@ weather_jan_jul_ggplot = weather_jan_jul |>
 ggplot(aes(x = year, y = mean_tmax, group = id)) +
   geom_point() + geom_path() +
   facet_grid(~month) +
+  scale_x_continuous(breaks = seq(min(weather_jan_jul$year), max(weather_jan_jul$year), by = 10)) +
   labs(
     title = "Mean Max Temperature in January and July by Stations",
        x = "Year", 
@@ -185,11 +187,11 @@ Merged_nhanes_dat = nhanes_covar_df |>
 In this section, the datasets were cleaned and organized as per the
 requirements, and a merged dataset was created.
 
-## Section 2:Gender distribution and age trends across education categories
+## Section 2: Gender distribution and age trends across education categories
 
 ``` r
 Sex_in_education_cate = Merged_nhanes_dat |> 
-  group_by(education, sex) |> 
+  group_by(Education, sex) |> 
   summarise(count = n()) |> 
   pivot_wider(
     names_from = sex,
@@ -199,10 +201,10 @@ Sex_in_education_cate = Merged_nhanes_dat |>
 knitr::kable(Sex_in_education_cate, caption = "Number of Men and Women in Each Education Category")
 ```
 
-| education              | Male | Female |
+| Education              | Male | Female |
 |:-----------------------|-----:|-------:|
-| High school equivalent |   34 |     23 |
 | Less than high school  |   27 |     28 |
+| High school equivalent |   34 |     23 |
 | More than high school  |   54 |     59 |
 
 Number of Men and Women in Each Education Category
@@ -211,24 +213,30 @@ Number of Men and Women in Each Education Category
 Age_distri_in_Edc_plot = Merged_nhanes_dat |> 
   ggplot(aes(x = age, fill = sex)) +
   geom_density(alpha = 0.5) +
-  facet_wrap(~education) +
+  facet_grid(~Education) +
   labs(
     title = "Age Distribution by Education and Gender",
     x = "Age",
     y = "Density"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "bottom") 
+  ) 
 
 Age_distri_in_Edc_plot2 = Merged_nhanes_dat |> 
   ggplot(aes(x = age, fill = sex)) +
  geom_histogram(position = "dodge", binwidth = 2) +
-  facet_wrap(~education) +
+  facet_grid(~Education) +
   labs(
     title = "Age Distribution by Education and Gender",
     x = "Age",
     y = "Density"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "bottom") 
+  )
+
+Age_distri_in_Edc_plot
 ```
+
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-5-1.png" width="90%" />
+
+``` r
+Age_distri_in_Edc_plot2
+```
+
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-5-2.png" width="90%" />
