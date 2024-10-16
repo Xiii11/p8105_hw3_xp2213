@@ -131,7 +131,7 @@ tmax_vs_tmin_panel + snowfall_distri_panel
 
 ``` r
 nhanes_covar_df =
-    read_csv("nhanes_covar.csv", na = c("NA", "", ".", " "), skip = 4) |> 
+    read_csv("Data/nhanes_covar.csv", na = c("NA", "", ".", " "), skip = 4) |> 
     janitor::clean_names() |> 
   drop_na() |> 
   mutate( education = as.character(education), sex = as.character(sex)
@@ -159,7 +159,7 @@ nhanes_covar_df =
 
 ``` r
 nhanes_accel_df =
-    read_csv("nhanes_accel.csv", na = c("NA", "", ".", " ")) |> 
+    read_csv("Data/nhanes_accel.csv", na = c("NA", "", ".", " ")) |> 
   janitor::clean_names()
 ```
 
