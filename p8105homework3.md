@@ -62,7 +62,7 @@ weather_jan_jul_ggplot = weather_jan_jul |>
 ggplot(aes(x = year, y = mean_tmax, group = id)) +
   geom_point() + geom_path() +
   facet_grid(~month) +
-  scale_x_continuous(breaks = seq(min(weather_jan_jul$year), max(weather_jan_jul$year), by = 10)) +
+  scale_x_continuous(breaks = seq(1980, 2010, by = 10)) +
   labs(
     title = "Mean Max Temperature in January and July by Stations",
        x = "Year", 
@@ -185,7 +185,8 @@ Merged_nhanes_dat = nhanes_covar_df |>
 ```
 
 In this section, the datasets were cleaned and organized as per the
-requirements, and a merged dataset was created.
+requirements, and a merged dataset was created. In this dataset, there
+are 225 observations and 1446 variables.
 
 ## Section 2: Gender distribution and age trends across education categories
 
@@ -209,10 +210,18 @@ knitr::kable(Sex_in_education_cate, caption = "Number of Men and Women in Each E
 
 Number of Men and Women in Each Education Category
 
+According to the table, the number of males and females education levels
+of “Less than high school” and “More than high school” are approximately
+similar, inidacting a balanced distribution between genders in these
+catgories. For education level of “High school equivalent”, males
+outnumber females by eleven, showing that men are more likely to obtain
+a high school equivalent degree compared to famles in this sample
+population.
+
 ``` r
 Age_distri_in_Edc_plot = Merged_nhanes_dat |> 
   ggplot(aes(x = age, fill = sex)) +
-  geom_density(alpha = 0.5) +
+  geom_density(alpha = .4, adjust = .5) +
   facet_grid(~Education) +
   labs(
     title = "Age Distribution by Education and Gender",
@@ -220,23 +229,20 @@ Age_distri_in_Edc_plot = Merged_nhanes_dat |>
     y = "Density"
   ) 
 
-Age_distri_in_Edc_plot2 = Merged_nhanes_dat |> 
-  ggplot(aes(x = age, fill = sex)) +
- geom_histogram(position = "dodge", binwidth = 2) +
-  facet_grid(~Education) +
-  labs(
-    title = "Age Distribution by Education and Gender",
-    x = "Age",
-    y = "Density"
-  )
-
 Age_distri_in_Edc_plot
 ```
 
-<img src="p8105homework3_files/figure-gfm/unnamed-chunk-5-1.png" width="90%" />
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-6-1.png" width="90%" />
 
-``` r
-Age_distri_in_Edc_plot2
-```
-
-<img src="p8105homework3_files/figure-gfm/unnamed-chunk-5-2.png" width="90%" />
+According to the density plot, three education levels are showing
+different age distributions between genders. For the “Less than high
+school” education category, males have a peak between age 40 and 50,
+while females show a more even distribution across age. Both genders
+display a left-skewed distribution, with higher densities in older age
+groups. For “High school equivalent” category, males display a
+relatively uneven distribution of age with various peaks across ages,
+while females show a more left-skewed distribution with a peak between
+age 70 and 80. Lastly, for the “More than high school” category, both
+genders demonstrate a right-skewed distribution. Females have a
+prominent peak at age of 30, and males also show less pronounced peak
+around that age.
