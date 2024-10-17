@@ -221,7 +221,7 @@ population.
 ``` r
 Age_distri_in_Edc_plot = Merged_nhanes_dat |> 
   ggplot(aes(x = age, fill = sex)) +
-  geom_density(alpha = .4, adjust = .5) +
+  geom_density(alpha = 0.4, adjust = 0.5) +
   facet_grid(~Education) +
   labs(
     title = "Age Distribution by Education and Gender",
@@ -252,7 +252,7 @@ around that age.
 ``` r
 Total_daily_activity = Merged_nhanes_dat |> 
   group_by(seqn, age, sex, Education) |> 
-  summarise(total_activity = sum(min1:min1440, na.rm = TRUE)) |> 
+  summarise(total_activity = sum(c_across(starts_with("min")), na.rm = TRUE)) |> 
   ggplot(aes(x = age, y = total_activity, color = sex)) +
   geom_point(alpha = 0.5) +
   geom_smooth(se = FALSE) +
@@ -275,32 +275,22 @@ Total_daily_activity
 
 <img src="p8105homework3_files/figure-gfm/unnamed-chunk-7-1.png" width="90%" />
 
-For the first category, “Less than high school,” the overall daily total
-activity appears to be low for both male and female participants, with
-most data points falling below 50 in total activities. Both genders show
-a slight decrease in activity as they age. The trend lines indicate that
-women maintain slightly higher daily activity in middle and older ages,
-while male participants tend to have higher activity levels in younger
-age groups.
-
-For participants with “High school equivalent” degrees, activity levels
-remain low for both males and females. Activity decreases with age for
-both genders. The trend lines suggest that there are no large
-differences between men and women, although men’s activity levels
-continue to decline more consistently compared to women as they age.
-
-In the last category, “More than high school,” both genders display
-higher overall activity levels compared to the other two categories,
-particularly among the younger participants. Women between the ages of
-20 and 60 show higher activity levels compared to men with the same
-education level. The trend lines indicate a decline in men’s total
-activity levels around the age of 40, while women in this group remain
-consistently more active across all ages.
-
-In general, total activity levels decrease with age across all education
-categories. The differences between genders are relatively small, but
-participants with higher education levels tend to have higher total
-activity levels overall.
+For the first category, “Less than high school,” as age rises, overall
+activity gradually decreases for both males and females. Females show
+more variability in activity levels at later ages, whereas males tend to
+start with higher overall activity at earlier ages. However, by the time
+they are 60 years old and beyond, the gap between males and females
+narrows considerably. For participants with “High school equivalent”
+degrees, the overall activity of females peaks more prominently at the
+age of 30, after which it gradually decreases. In contrast, males
+experience a more extensive peak in their activity levels between the
+ages of 30 and 50, after which they drastically decrease. In this
+educational group, females are often more active than males. In the last
+category, “More than high school,” activity levels for both sexes are
+comparatively constant from early years until about age 60, at which
+point they noticeably decline. While in younger age groups, women seem
+to be more active than men, the pattern gradually reverses in middle age
+and then levels off as both sexes get older.
 
 ## Section 4: 24Hr activity patterns by education level and gender
 
@@ -314,21 +304,29 @@ hourly_activity = Merged_nhanes_dat |>
   ) |> 
   mutate(minutes = as.numeric(minutes)) |> 
   ggplot(aes(x = minutes, y = activity, color = sex)) +
-  geom_line(alpha = 0.3) +
-  geom_smooth(method = "loess", se = FALSE) +
+  geom_smooth(se = FALSE) +
   facet_grid(~education) +
   labs(
     title = "24Hr Activity Patterns by Education Level and Gender",
     x = "Minute of the Day",
-    y = "Activity"
+    y = "Activity (MIMS)"
   )
 
 hourly_activity
 ```
 
-    ## `geom_smooth()` using formula = 'y ~ x'
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
 <img src="p8105homework3_files/figure-gfm/unnamed-chunk-8-1.png" width="90%" />
+
+According to the graph, the “Less than high school” group demonstrates
+the highest activity levels during the day compared to the other
+education categories. Females tend to maintain slightly higher activity
+levels than males across all education categories, although the
+differences between genders are not very pronounced. Additionally, most
+people tend to engage in higher activity between approximately 500
+minutes and 1250 minutes, with lower activity during the early morning
+and late evening.Afterwards, the activity level droped.
 
 # Problem 3 NYC Citi Bike System Data Exploration
 
@@ -413,41 +411,26 @@ Total_NYCiti =
 
 Total_NYCiti_summary = Total_NYCiti |> 
   group_by(year, month, member_casual) |> 
-  summarise(total_riders = n())
+  summarise(total_riders = n()) |> 
+  pivot_wider(
+    names_from = member_casual,
+    values_from = total_riders
+  )
 ```
 
     ## `summarise()` has grouped output by 'year', 'month'. You can override using the
     ## `.groups` argument.
 
 ``` r
-knitr::kable(Total_NYCiti_summary,
-             col.names = c("Year", "Month", "Member Type", "Total Number of Rides"),
-             caption = "Total Number of Rides by Year, Month, and Rider Type"
-             )
+knitr::kable(Total_NYCiti_summary)
 ```
 
-| Year | Month | Member Type | Total Number of Rides |
-|-----:|:------|:------------|----------------------:|
-| 2020 | Jan   | casual      |                   984 |
-| 2020 | Jan   | member      |                 11436 |
-| 2020 | July  | casual      |                  5637 |
-| 2020 | July  | member      |                 15411 |
-| 2024 | Jan   | casual      |                  2108 |
-| 2024 | Jan   | member      |                 16753 |
-| 2024 | July  | casual      |                 10894 |
-| 2024 | July  | member      |                 36262 |
-
-Total Number of Rides by Year, Month, and Rider Type
-
-According to the table, we can observe that the number of casual riders
-is consistently lower than the number of member riders for every
-combination of year and month. The total number of both casual and
-member riders increased from 2020 to 2024, indicating that more people
-used the service overall in 2024, with a significant increase in those
-registering as members. Additionally, the number of rides taken by
-member riders is substantially higher than those taken by casual riders
-across all combinations of year and month, suggesting that members tend
-to use Citi Bike more frequently than casual users.
+| year | month | casual | member |
+|-----:|:------|-------:|-------:|
+| 2020 | Jan   |    984 |  11436 |
+| 2020 | July  |   5637 |  15411 |
+| 2024 | Jan   |   2108 |  16753 |
+| 2024 | July  |  10894 |  36262 |
 
 ## Section 2: The five most popular starting stations for July 2024
 
@@ -503,21 +486,47 @@ effects_on_median_duration
 
 <img src="p8105homework3_files/figure-gfm/unnamed-chunk-11-1.png" width="90%" />
 
+According to the plots, ride durations in July are typically longer than
+in January, with this pattern being particularly evident in the 2020
+data set. In July 2020, the median ride duration reaches its peak on the
+weekends, whereas in January 2020, it remains relatively stable
+throughout the week. By comparison, the 2024 data set exhibits less
+discrepancy in the median ride duration across the seven-day period in
+both months. The values observed in July are consistently higher than
+those recorded in January for both years. This indicates that ride
+durations are subject to seasonal variations, with July displaying
+longer rides, potentially due to favorable weather conditions.
+Furthermore, there is a noticeable discrepancy between 2020 and 2024,
+with the median ride durations consistently lower in 2024 across both
+months and days of the week.
+
 ## Section 4: The impact of month, membership status, and bike type on the distribution of ride duration in 2024
 
 ``` r
 distri_duration2024 = Total_NYCiti |> 
   filter(year == "2024") |> 
-  ggplot(aes(x = month, y = duration, fill = rideable_type)) +
-  geom_violin(trim = TRUE) +
-  facet_grid(~rideable_type) +
+  ggplot(aes(x = month, y = duration, fill = member_casual)) + 
+  geom_violin(trim = TRUE) + 
+  facet_grid(~rideable_type) + 
   labs(
-    title = "The Impact of Month, Membership Status, and Bike Type on the Distribution of Ride Duration in 2024",
-    x = "Month",
-    y = "Ride Duration (mins)"
+    title = "Impact of Month, Membership Status, and Bike Type on Ride Duration in 2024", 
+    x = "Month", 
+    y = "Ride Duration (mins)", 
+    fill = "Membership Status"
   )
 
 distri_duration2024
 ```
 
 <img src="p8105homework3_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />
+
+According to the plots, electric bikes consistently show shorter ride
+durations compared to classic bikes, suggesting they might be favored
+for quicker trips. Membership status significantly impacts ride
+duration, with casual riders taking longer trips than members across all
+categories. Seasonal differences are evident, with July rides generally
+lasting longer than January rides, particularly for casual users on
+classic bikes. This seasonal effect is less pronounced for electric
+bikes, indicating their utility year-round. Casual riders exhibit more
+variability in ride duration, especially with classic bikes, while
+members show more consistent usage patterns.
