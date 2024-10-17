@@ -255,7 +255,7 @@ Total_daily_activity = Merged_nhanes_dat |>
   summarise(total_activity = sum(min1:min1440, na.rm = TRUE)) |> 
   ggplot(aes(x = age, y = total_activity, color = sex)) +
   geom_point(alpha = 0.5) +
-  geom_smooth() +
+  geom_smooth(se = FALSE) +
   facet_grid(~Education) +
   labs(
     title = "Total Daily Activity vs. Age by Education Level and Gender",
@@ -303,3 +303,173 @@ participants with higher education levels tend to have higher total
 activity levels overall.
 
 ## Section 4: 24Hr activity patterns by education level and gender
+
+``` r
+hourly_activity = Merged_nhanes_dat |>
+  pivot_longer(
+    cols = starts_with("min"),
+    names_to = "minutes",
+    values_to = "activity",
+    names_prefix = "min"
+  ) |> 
+  mutate(minutes = as.numeric(minutes)) |> 
+  ggplot(aes(x = minutes, y = activity, color = sex)) +
+  geom_line(alpha = 0.3) +
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_grid(~education) +
+  labs(
+    title = "24Hr Activity Patterns by Education Level and Gender",
+    x = "Minute of the Day",
+    y = "Activity"
+  )
+
+hourly_activity
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-8-1.png" width="90%" />
+
+# Problem 3 NYC Citi Bike System Data Exploration
+
+## Section 1: Dataset import and clean
+
+``` r
+NYCiti_Jan_2020 =
+    read_csv("Data/Jan 2020 Citi.csv", na = c("NA", "", ".", " ")) |> 
+  janitor::clean_names() |> 
+  mutate(
+    year = 2020, month = "Jan"
+  )
+```
+
+    ## Rows: 12420 Columns: 7
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (6): ride_id, rideable_type, weekdays, start_station_name, end_station_n...
+    ## dbl (1): duration
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+NYCiti_Jan_2024 =
+    read_csv("Data/Jan 2024 Citi.csv", na = c("NA", "", ".", " ")) |> 
+  janitor::clean_names() |> 
+  mutate(
+    year = 2024, month = "Jan"
+  )
+```
+
+    ## Rows: 18861 Columns: 7
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (6): ride_id, rideable_type, weekdays, start_station_name, end_station_n...
+    ## dbl (1): duration
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+NYCiti_July_2020 =
+    read_csv("Data/July 2020 Citi.csv", na = c("NA", "", ".", " ")) |> 
+  janitor::clean_names() |> 
+  mutate(
+    year = 2020, month = "July"
+  )
+```
+
+    ## Rows: 21048 Columns: 7
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (6): ride_id, rideable_type, weekdays, start_station_name, end_station_n...
+    ## dbl (1): duration
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+NYCiti_July_2024 =
+    read_csv("Data/July 2024 Citi.csv", na = c("NA", "", ".", " ")) |> 
+  janitor::clean_names() |> 
+  mutate(
+    year = 2024, month = "July"
+  )
+```
+
+    ## Rows: 47156 Columns: 7
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (6): ride_id, rideable_type, weekdays, start_station_name, end_station_n...
+    ## dbl (1): duration
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+Total_NYCiti = 
+  bind_rows(NYCiti_Jan_2020, NYCiti_Jan_2024, NYCiti_July_2020, NYCiti_July_2024) |> 
+  janitor::clean_names() |> 
+  group_by(year, month, member_casual) |> 
+  summarise(total_riders = n())
+```
+
+    ## `summarise()` has grouped output by 'year', 'month'. You can override using the
+    ## `.groups` argument.
+
+``` r
+knitr::kable(Total_NYCiti,
+             col.names = c("Year", "Month", "Member Type", "Total Number of Rides"),
+             caption = "Total Number of Rides by Year, Month, and Rider Type"
+             )
+```
+
+| Year | Month | Member Type | Total Number of Rides |
+|-----:|:------|:------------|----------------------:|
+| 2020 | Jan   | casual      |                   984 |
+| 2020 | Jan   | member      |                 11436 |
+| 2020 | July  | casual      |                  5637 |
+| 2020 | July  | member      |                 15411 |
+| 2024 | Jan   | casual      |                  2108 |
+| 2024 | Jan   | member      |                 16753 |
+| 2024 | July  | casual      |                 10894 |
+| 2024 | July  | member      |                 36262 |
+
+Total Number of Rides by Year, Month, and Rider Type
+
+According to the table, we can observe that the number of casual riders
+is consistently lower than the number of member riders for every
+combination of year and month. The total number of both casual and
+member riders increased from 2020 to 2024, indicating that more people
+used the service overall in 2024, with a significant increase in those
+registering as members. Additionally, the number of rides taken by
+member riders is substantially higher than those taken by casual riders
+across all combinations of year and month, suggesting that members tend
+to use Citi Bike more frequently than casual users.
+
+## Section 2: The five most popular starting stations for July 2024
+
+``` r
+Five_most_pop_stationsJu2024 = NYCiti_July_2024 |> 
+  group_by(start_station_name) |> 
+  summarise(number_of_rides = n()) |> 
+  arrange(desc(number_of_rides)) |> 
+  head(5)
+
+knitr::kable(Five_most_pop_stationsJu2024,
+             col.names = c("Start Station Name", "Total Number of Rides"),
+             caption = "The Top Five Starting Stations for July 2024"
+             )
+```
+
+| Start Station Name       | Total Number of Rides |
+|:-------------------------|----------------------:|
+| Pier 61 at Chelsea Piers |                   163 |
+| University Pl & E 14 St  |                   155 |
+| W 21 St & 6 Ave          |                   152 |
+| West St & Chambers St    |                   150 |
+| W 31 St & 7 Ave          |                   146 |
+
+The Top Five Starting Stations for July 2024
+
+## Section 3:
