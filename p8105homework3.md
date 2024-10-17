@@ -326,7 +326,7 @@ levels than males across all education categories, although the
 differences between genders are not very pronounced. Additionally, most
 people tend to engage in higher activity between approximately 500
 minutes and 1250 minutes, with lower activity during the early morning
-and late evening.Afterwards, the activity level droped.
+and late evening.Afterwards, the activity level dropped.
 
 # Problem 3 NYC Citi Bike System Data Exploration
 
