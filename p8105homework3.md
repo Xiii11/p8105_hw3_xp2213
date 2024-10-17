@@ -409,7 +409,9 @@ NYCiti_July_2024 =
 ``` r
 Total_NYCiti = 
   bind_rows(NYCiti_Jan_2020, NYCiti_Jan_2024, NYCiti_July_2020, NYCiti_July_2024) |> 
-  janitor::clean_names() |> 
+  janitor::clean_names()
+
+Total_NYCiti_summary = Total_NYCiti |> 
   group_by(year, month, member_casual) |> 
   summarise(total_riders = n())
 ```
@@ -418,7 +420,7 @@ Total_NYCiti =
     ## `.groups` argument.
 
 ``` r
-knitr::kable(Total_NYCiti,
+knitr::kable(Total_NYCiti_summary,
              col.names = c("Year", "Month", "Member Type", "Total Number of Rides"),
              caption = "Total Number of Rides by Year, Month, and Rider Type"
              )
@@ -472,4 +474,50 @@ knitr::kable(Five_most_pop_stationsJu2024,
 
 The Top Five Starting Stations for July 2024
 
-## Section 3:
+## Section 3: The effects of day of the week, month, and year on median ride duration
+
+``` r
+effects_on_median_duration = Total_NYCiti |> 
+  group_by(year, month, weekdays) |> 
+  summarise(median_ride_duration = median(duration)) |> 
+  mutate(
+    weekdays, factor(weekdays, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+    ) |> 
+  ggplot(aes(x = weekdays, y = median_ride_duration, group = year, color = factor(year))) +
+  geom_line() +
+  geom_point() +
+  facet_grid(~month) +
+  labs(
+    title = "The Effects of Day of the Week, Month, and Year on Median Ride Duration",
+    x = "Day of the week",
+    y = "Median Ride Duration (mins)"
+  )
+```
+
+    ## `summarise()` has grouped output by 'year', 'month'. You can override using the
+    ## `.groups` argument.
+
+``` r
+effects_on_median_duration
+```
+
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-11-1.png" width="90%" />
+
+## Section 4: The impact of month, membership status, and bike type on the distribution of ride duration in 2024
+
+``` r
+distri_duration2024 = Total_NYCiti |> 
+  filter(year == "2024") |> 
+  ggplot(aes(x = month, y = duration, fill = rideable_type)) +
+  geom_violin(trim = TRUE) +
+  facet_grid(~rideable_type) +
+  labs(
+    title = "The Impact of Month, Membership Status, and Bike Type on the Distribution of Ride Duration in 2024",
+    x = "Month",
+    y = "Ride Duration (mins)"
+  )
+
+distri_duration2024
+```
+
+<img src="p8105homework3_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />

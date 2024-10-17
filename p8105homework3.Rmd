@@ -294,11 +294,13 @@ NYCiti_July_2024 =
 
 Total_NYCiti = 
   bind_rows(NYCiti_Jan_2020, NYCiti_Jan_2024, NYCiti_July_2020, NYCiti_July_2024) |> 
-  janitor::clean_names() |> 
+  janitor::clean_names()
+
+Total_NYCiti_summary = Total_NYCiti |> 
   group_by(year, month, member_casual) |> 
   summarise(total_riders = n())
 
-knitr::kable(Total_NYCiti,
+knitr::kable(Total_NYCiti_summary,
              col.names = c("Year", "Month", "Member Type", "Total Number of Rides"),
              caption = "Total Number of Rides by Year, Month, and Rider Type"
              )
@@ -324,4 +326,47 @@ knitr::kable(Five_most_pop_stationsJu2024,
 
 ```
 
-## Section 3: 
+## Section 3: The effects of day of the week, month, and year on median ride duration
+
+```{r}
+
+effects_on_median_duration = Total_NYCiti |> 
+  group_by(year, month, weekdays) |> 
+  summarise(median_ride_duration = median(duration)) |> 
+  mutate(
+    weekdays, factor(weekdays, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+    ) |> 
+  ggplot(aes(x = weekdays, y = median_ride_duration, group = year, color = factor(year))) +
+  geom_line() +
+  geom_point() +
+  facet_grid(~month) +
+  labs(
+    title = "The Effects of Day of the Week, Month, and Year on Median Ride Duration",
+    x = "Day of the week",
+    y = "Median Ride Duration (mins)"
+  )
+  
+effects_on_median_duration
+
+```
+
+## Section 4: The impact of month, membership status, and bike type on the distribution of ride duration in 2024
+
+```{r}
+
+distri_duration2024 = Total_NYCiti |> 
+  filter(year == "2024") |> 
+  ggplot(aes(x = month, y = duration, fill = member_casual)) +
+  geom_violin(trim = TRUE) +
+  facet_grid(~rideable_type) +
+  labs(
+    title = "The Impact of Month, Membership Status, and Bike Type on the Distribution of Ride Duration in 2024",
+    x = "Month",
+    y = "Ride Duration (mins)",
+    fill = "Membership Status"
+  )
+
+distri_duration2024
+
+```
+
